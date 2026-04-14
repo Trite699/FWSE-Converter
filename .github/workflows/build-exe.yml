@@ -1,0 +1,39 @@
+name: Build FWSE Converter EXE
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish EXE (single file)
+        run: |
+          dotnet publish -c Release -r win-x64 ^
+          --self-contained true ^
+          /p:PublishSingleFile=true ^
+          /p:IncludeNativeLibrariesForSelfExtract=true ^
+          -o publish
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FWSE-Converter-EXE
+          path: publish/
